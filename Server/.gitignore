@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+
+# Prisma Client is generated on install (postinstall) and on schema change
+src/generated/

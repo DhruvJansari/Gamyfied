@@ -1,0 +1,45 @@
+import "dotenv/config";
+
+import type { Server } from "node:http";
+
+import { createApp } from "./app";
+import { closePostgres, connectPostgres } from "./config/db";
+import { env } from "./config/env";
+import { closeRedis, connectRedis } from "./config/redis";
+
+let server: Server | undefined;
+
+async function main(): Promise<void> {
+  await connectPostgres();
+  await connectRedis();
+
+  const app = createApp();
+  server = app.listen(env.port, () => {
+    console.log(`[server] listening on http://localhost:${env.port}`);
+  });
+}
+
+async function shutdown(signal: string): Promise<void> {
+  console.log(`[server] ${signal} received, closing`);
+
+  try {
+    if (server) {
+      await new Promise<void>((resolve, reject) => {
+        server?.close((err) => (err ? reject(err) : resolve()));
+      });
+    }
+    await Promise.all([closePostgres(), closeRedis()]);
+    process.exit(0);
+  } catch (err) {
+    console.error("[server] error during shutdown", err);
+    process.exit(1);
+  }
+}
+
+process.on("SIGINT", () => void shutdown("SIGINT"));
+process.on("SIGTERM", () => void shutdown("SIGTERM"));
+
+main().catch((err) => {
+  console.error("[server] failed to start", err);
+  process.exit(1);
+});

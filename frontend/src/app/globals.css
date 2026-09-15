@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+/* Dark mode is a user setting, not an OS preference: the `.dark` class on <html>
+   is set by the theme script in layout.tsx from the stored preference. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Semantic colour tokens (see DESIGN.md). Light values on :root, dark values on
+   .dark. Components use the Tailwind utilities below (bg-canvas, text-ink, ...)
+   and never a raw hex, so both themes come for free.
+   --------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  --canvas: #ffffff;
+  --surface-soft: #f8fafc;
+  --surface-strong: #e0e2e6;
+  --surface-dark: #181d26;
+  --surface-dark-elevated: #1d1f25;
+
+  --ink: #181d26;
+  --body: #333840;
+  --muted: #41454d;
+  --hairline: #dddddd;
+  --border-strong: #9297a0;
+
+  --primary: #181d26;
+  --primary-active: #0d1218;
+  --on-primary: #ffffff;
+  --on-dark: #ffffff;
+
+  --link: #1b61c9;
+  --link-active: #1a3866;
+  --info: #254fad;
+  --info-border: #458fff;
+  --success: #006400;
+  --success-border: #39bf45;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --canvas: #0f1216;
+  --surface-soft: #181d26;
+  --surface-strong: #242a33;
+  --surface-dark: #181d26;
+  --surface-dark-elevated: #1d1f25;
+
+  --ink: #f2f4f7;
+  --body: #c9ced6;
+  --muted: #9297a0;
+  --hairline: #2b313a;
+  --border-strong: #4a515c;
+
+  /* The near-black CTA inverts to near-white so it stays the loudest thing on the page. */
+  --primary: #f2f4f7;
+  --primary-active: #ffffff;
+  --on-primary: #181d26;
+  --on-dark: #ffffff;
+
+  --link: #6ea3ff;
+  --link-active: #9dbfff;
+  --info: #6ea3ff;
+  --info-border: #458fff;
+  --success: #39bf45;
+  --success-border: #39bf45;
+}
+
+@theme inline {
+  /* Google Sans is loaded by next/font in layout.tsx as `--google-sans`.
+     This exposes it as the `font-google-sans` utility and makes it the default
+     family Preflight applies to <html>. */
+  --font-google-sans: var(--google-sans), system-ui, sans-serif;
+  --default-font-family: var(--font-google-sans);
+  --default-font-weight: 400;
+
+  /* Theme-aware colours → bg-canvas, text-ink, border-hairline, dark: variants, etc. */
+  --color-canvas: var(--canvas);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-strong: var(--surface-strong);
+  --color-surface-dark: var(--surface-dark);
+  --color-surface-dark-elevated: var(--surface-dark-elevated);
+
+  --color-ink: var(--ink);
+  --color-body: var(--body);
+  --color-muted: var(--muted);
+  --color-hairline: var(--hairline);
+  --color-border-strong: var(--border-strong);
+
+  --color-primary: var(--primary);
+  --color-primary-active: var(--primary-active);
+  --color-on-primary: var(--on-primary);
+  --color-on-dark: var(--on-dark);
+
+  --color-link: var(--link);
+  --color-link-active: var(--link-active);
+  --color-info: var(--info);
+  --color-info-border: var(--info-border);
+  --color-success: var(--success);
+  --color-success-border: var(--success-border);
+
+  /* Signature card surfaces — brand voltage. Same in both themes; they always
+     carry their own on-surface text colour (on-dark for coral/forest, ink for the pastels). */
+  --color-signature-coral: #aa2d00;
+  --color-signature-forest: #0a2e0e;
+  --color-signature-cream: #f5e9d4;
+  --color-signature-peach: #fcab79;
+  --color-signature-mint: #a8d8c4;
+  --color-signature-yellow: #f4d35e;
+  --color-signature-mustard: #d9a441;
+
+  /* Radius scale: xs legal/system, sm inputs, md content cards, lg CTAs + signature cards.
+     `pill` is reserved for the pricing sub-system. */
+  --radius-xs: 2px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
+
+  /* Vertical rhythm between major bands → py-section */
+  --spacing-section: 96px;
+}
+
+/* Typography hierarchy is driven by semantic tags, not by per-element utilities.
+   Pick the tag for the content's structure; the size follows. Weight stays 400 —
+   emphasis comes from size and colour contrast, not boldness (DESIGN.md). */
+@layer base {
+  body {
+    @apply bg-canvas text-body;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-ink;
+  }
+
+  h1 {
+    @apply text-3xl font-normal tracking-tight text-balance md:text-4xl lg:text-5xl;
+  }
+
+  h2 {
+    @apply text-2xl font-normal tracking-tight text-balance md:text-3xl;
+  }
+
+  h3 {
+    @apply text-xl font-normal md:text-2xl;
+  }
+
+  h4 {
+    @apply text-lg font-normal md:text-xl;
+  }
+
+  p {
+    @apply text-lg leading-7;
+  }
+
+  small {
+    @apply text-sm leading-6;
+  }
+
+  a {
+    @apply text-link active:text-link-active;
+  }
+}

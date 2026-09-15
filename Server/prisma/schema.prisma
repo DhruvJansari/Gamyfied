@@ -1,0 +1,87 @@
+// Prisma schema — the single source of truth for the Postgres structure.
+// Every change here ships as a migration: `npm run db:migrate -- --name <what_changed>`.
+// The connection URL lives in prisma.config.ts (read from DATABASE_URL), not here.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Models land here as each phase is built (see frontend/project/Context.md §7).
+// Auth design: Project/Auth.md.
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum Provider {
+  GITHUB
+  GOOGLE
+}
+
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  /// Permanent public ID, e.g. "7K2M9QX" (shown as #7K2M9QX). Never changes, never reused.
+  publicId        String    @unique @map("public_id") @db.VarChar(7)
+  email           String    @unique @db.Citext
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  phone           String?   @unique @db.VarChar(20)
+  phoneVerifiedAt DateTime? @map("phone_verified_at")
+  displayName     String    @map("display_name") @db.VarChar(60)
+  /// Changeable profile URL handle. Everything else resolves against publicId.
+  handle          String    @unique @db.Citext
+  role            Role      @default(USER)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  accounts Account[]
+  sessions Session[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  provider          Provider
+  providerAccountId String   @map("provider_account_id")
+  /// Provider access token, AES-256-GCM encrypted. GitHub's is needed later for verification.
+  accessTokenEnc    String?  @map("access_token_enc")
+  scopes            String?
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+/// One row per login (device). `id` is the `sid` claim in the access JWT.
+model Session {
+  id                String    @id @default(uuid()) @db.Uuid
+  userId            String    @map("user_id") @db.Uuid
+  refreshTokenHash  String    @unique @map("refresh_token_hash") @db.Char(64)
+  /// Hash of the token this one replaced — presenting it again means it was stolen.
+  previousTokenHash String?   @map("previous_token_hash") @db.Char(64)
+  rotatedAt         DateTime? @map("rotated_at")
+  expiresAt         DateTime  @map("expires_at")
+  revokedAt         DateTime? @map("revoked_at")
+  revokedReason     String?   @map("revoked_reason") @db.VarChar(32)
+  ip                String?   @db.VarChar(45)
+  userAgent         String?   @map("user_agent") @db.VarChar(255)
+  createdAt         DateTime  @default(now()) @map("created_at")
+  lastUsedAt        DateTime  @default(now()) @map("last_used_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([previousTokenHash])
+  @@map("sessions")
+}
