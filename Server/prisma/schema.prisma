@@ -40,8 +40,9 @@ model User {
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  accounts Account[]
-  sessions Session[]
+  accounts   Account[]
+  sessions   Session[]
+  onboarding Onboarding?
 
   @@map("users")
 }
@@ -84,4 +85,38 @@ model Session {
   @@index([userId])
   @@index([previousTokenHash])
   @@map("sessions")
+}
+
+enum OnboardingGoal {
+  GET_HIRED
+  BUILD_AUDIENCE
+  COMPETE
+}
+
+/// Skill categories a user can be ranked in. Also the per-skill leaderboard keys later.
+enum SkillCategory {
+  WEB_DEV
+  MOBILE_DEV
+  AI_ML
+  DSA_CP
+  DEVOPS_CLOUD
+  GAME_DEV
+  CYBERSECURITY
+  DATA_SCIENCE
+}
+
+/// One-time questionnaire result (Context.md §5.3). Re-submitting overwrites it — there is
+/// no history here, just the current answer, which seeds category placement.
+model Onboarding {
+  id          String          @id @default(uuid()) @db.Uuid
+  userId      String          @unique @map("user_id") @db.Uuid
+  /// Free-text stack tags as the user typed them, e.g. ["React", "Postgres"].
+  stack       String[]
+  goal        OnboardingGoal
+  categories  SkillCategory[]
+  completedAt DateTime        @default(now()) @map("completed_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("onboarding")
 }

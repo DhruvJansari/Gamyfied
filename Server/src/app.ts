@@ -7,6 +7,7 @@ import { env } from "./config/env";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler";
 import { originCheck } from "./middleware/origin-check";
 import { authRoutes } from "./modules/auth/auth.routes";
+import { onboardingRoutes } from "./modules/onboarding/onboarding.routes";
 import { usersRoutes } from "./modules/users/users.routes";
 
 export function createApp(): Express {
@@ -35,6 +36,7 @@ export function createApp(): Express {
   // whole prefix and the browser sees one origin (cookies need no Domain, no CORS dance).
   app.use("/api/auth", authRoutes);
   app.use("/api/users", usersRoutes);
+  app.use("/api/onboarding", onboardingRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

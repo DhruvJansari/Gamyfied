@@ -65,7 +65,8 @@ is twenty chairs, and someone is always trying to take yours.
 
 ### 5.1 Auth and accounts
 
-- Sign in with **Google**, **GitHub**, or **local email + password**
+- Sign in with **Google**, **GitHub**, or a **one-time code by email or phone**. There
+  are no passwords anywhere in the system (see `Server/Project/Auth.md`)
 - Guests can browse the leaderboard, public profiles and the global community
   without an account. They cannot post, compete or be ranked.
 - GitHub sign-in is the preferred path, since we need that connection anyway for
@@ -98,7 +99,7 @@ Output seeds their category placement and their starting profile template.
 
 This is not a profile form. It is a code editor.
 
-- User writes **raw HTML, CSS and vanilla JS** to build their own portfolio page
+- User writes **raw HTML, CSS and JS** to build their own portfolio page
 - Live preview alongside the editor
 - Save, revert, and a published-vs-draft state
 - Starter templates for people who don't want to start blank
@@ -258,7 +259,7 @@ Redis is never the source of truth. It must always be rebuildable from Postgres.
 
 - Google OAuth
 - GitHub OAuth
-- Local email + password
+- Passwordless one-time code (email or SMS)
 
 ---
 

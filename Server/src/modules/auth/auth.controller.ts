@@ -5,7 +5,6 @@ import { AppError, ErrorCode } from "../../lib/errors";
 import { clientIp, ok } from "../../lib/http";
 import type { Provider } from "../../generated/prisma/enums";
 import { validated } from "../../middleware/validate";
-import { toMeDto } from "../users/users.dto";
 import { usersService } from "../users/users.service";
 import type { SendOtpInput, VerifyOtpInput } from "./auth.schemas";
 import { authService } from "./auth.service";
@@ -31,7 +30,7 @@ export const authController = {
   async verifyOtp(req: Request, res: Response): Promise<void> {
     const { user, tokens, isNewUser } = await authService.verifyCodeAndSignIn(validated<VerifyOtpInput>(req), client(req));
     setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
-    ok(res, { user: toMeDto(user), isNewUser });
+    ok(res, { user: await usersService.getMe(user.id), isNewUser });
   },
 
   async oauthStart(req: Request, res: Response): Promise<void> {
@@ -62,7 +61,7 @@ export const authController = {
     try {
       const { accessToken, refreshToken, user } = await authService.refresh(presented, client(req));
       setAuthCookies(res, accessToken, refreshToken);
-      ok(res, { user: toMeDto(user) });
+      ok(res, { user: await usersService.getMe(user.id) });
     } catch (err) {
       if (!(err instanceof AppError && err.code === ErrorCode.REFRESH_RACE)) clearAuthCookies(res);
       throw err;

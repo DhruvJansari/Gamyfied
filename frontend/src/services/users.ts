@@ -1,5 +1,6 @@
 import { request } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
+import type { Onboarding } from "./onboarding";
 
 export type Role = "USER" | "MODERATOR" | "ADMIN";
 
@@ -15,6 +16,9 @@ export type Me = {
   handle: string;
   role: Role;
   createdAt: string;
+  /** Null until the questionnaire is submitted. `/onboarding` gates on this. */
+  onboardedAt: string | null;
+  onboarding: Onboarding | null;
 };
 
 export const usersService = {

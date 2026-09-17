@@ -15,4 +15,7 @@ export const endpoints = {
   users: {
     me: "/api/users/me",
   },
+  onboarding: {
+    submit: "/api/onboarding",
+  },
 } as const;
