@@ -8,6 +8,10 @@ import { errorHandler, notFoundHandler } from "./middleware/error-handler";
 import { originCheck } from "./middleware/origin-check";
 import { authRoutes } from "./modules/auth/auth.routes";
 import { onboardingRoutes } from "./modules/onboarding/onboarding.routes";
+import { participationsRoutes } from "./modules/participations/participations.routes";
+import { profilesRoutes } from "./modules/profiles/profiles.routes";
+import { projectsRoutes } from "./modules/projects/projects.routes";
+import { socialLinksRoutes } from "./modules/social-links/social-links.routes";
 import { usersRoutes } from "./modules/users/users.routes";
 
 export function createApp(): Express {
@@ -37,6 +41,10 @@ export function createApp(): Express {
   app.use("/api/auth", authRoutes);
   app.use("/api/users", usersRoutes);
   app.use("/api/onboarding", onboardingRoutes);
+  app.use("/api/profiles", profilesRoutes);
+  app.use("/api/social-links", socialLinksRoutes);
+  app.use("/api/projects", projectsRoutes);
+  app.use("/api/participations", participationsRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

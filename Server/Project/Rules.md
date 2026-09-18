@@ -38,7 +38,7 @@ Every endpoint returns the same envelope shape, whether it succeeded or failed. 
 Successful responses carry the data and nothing extra.
 Failed responses carry a machine-readable error code, a safe human-readable message, and an optional field error map.
 Error codes are stable strings defined in one place and never changed casually. The frontend maps them to user-facing copy, so renaming one silently breaks the UI.
-Lists are always paginated. Never return an unbounded collection, even when the table is small today.
+Lists are always paginated. Never return an unbounded collection, even when the table is small today. A per-user collection with a hard cap enforced on write (social links 4, projects 5, participations 5) may be embedded whole in its parent response.
 Error handling
 All errors exit through a single error-handling middleware. Controllers and services throw typed errors; only that middleware turns them into a response.
 Never return a raw database error, driver error or stack trace to the client. Log the detail server-side, return a safe code and message.
@@ -56,6 +56,8 @@ Every schema change ships as a migration. No manual changes to a live database.
 Database transactions wrap anything that writes to more than one table.
 Background work
 Long-running work never happens inside a request handler. Verification, scoring runs and re-checks are all background jobs.
+Exception, by design: the profile score recompute (scoringService.recomputeProfileScore) runs inline after each profile write. It is a handful of indexed reads plus a pure function over one user's rows, cheaper than the write that triggered it. It takes only a userId so a job can call it unchanged when scoring grows.
+Anything that checks a claim goes through the VerificationProvider interface (modules/verification/provider.ts). A provider returns an outcome now or null for "queued" and later calls verificationService.complete(). The profile modules never know which provider is behind it.
 A request that triggers a job returns immediately with a job or status reference. The frontend polls or subscribes for the result.
 Jobs must be safe to run twice. Assume they will be retried.
 Jobs must be safe to fail. A failed verification leaves the previous score intact and marks the claim as needing a retry; it never wipes a user's standing.

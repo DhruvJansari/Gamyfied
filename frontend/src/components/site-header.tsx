@@ -36,7 +36,9 @@ export function SiteHeader() {
           <div aria-hidden className="h-10 w-24 animate-pulse rounded-lg bg-surface-strong" />
         ) : me.data ? (
           <>
-            <span className="hidden text-body sm:inline">{me.data.displayName}</span>
+            <Link href="/profile" className="hidden rounded-md px-3 py-2 text-body no-underline hover:bg-surface-soft sm:inline">
+              {me.data.displayName}
+            </Link>
             <button
               type="button"
               disabled={logout.isPending}

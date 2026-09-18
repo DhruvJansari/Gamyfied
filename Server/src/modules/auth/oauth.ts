@@ -12,6 +12,10 @@ export type OAuthProfile = {
   displayName: string;
   /** A handle suggestion from the provider (GitHub login), if any. */
   handleHint: string | null;
+  /** Public identity at the provider — becomes the LINKED social link and seeds the avatar. */
+  username: string | null;
+  avatarUrl: string | null;
+  profileUrl: string | null;
   accessToken: string;
   scopes: string;
 };
@@ -58,7 +62,13 @@ const providers = {
       ]);
       if (!userRes.ok || !emailsRes.ok) throw exchangeFailed("GITHUB", "profile fetch");
 
-      const user = (await userRes.json()) as { id: number; login: string; name: string | null };
+      const user = (await userRes.json()) as {
+        id: number;
+        login: string;
+        name: string | null;
+        avatar_url: string | null;
+        html_url: string | null;
+      };
       const emails = (await emailsRes.json()) as { email: string; primary: boolean; verified: boolean }[];
       const primary = emails.find((e) => e.primary && e.verified) ?? emails.find((e) => e.verified);
       if (!primary) {
@@ -72,6 +82,9 @@ const providers = {
         emailVerified: true,
         displayName: user.name?.trim() || user.login,
         handleHint: user.login,
+        username: user.login,
+        avatarUrl: user.avatar_url || null,
+        profileUrl: user.html_url || `https://github.com/${user.login}`,
         accessToken: token.access_token,
         scopes: token.scope ?? "",
       };
@@ -112,7 +125,13 @@ const providers = {
         signal: AbortSignal.timeout(10_000),
       });
       if (!infoRes.ok) throw exchangeFailed("GOOGLE", "userinfo");
-      const info = (await infoRes.json()) as { sub: string; email?: string; email_verified?: boolean; name?: string };
+      const info = (await infoRes.json()) as {
+        sub: string;
+        email?: string;
+        email_verified?: boolean;
+        name?: string;
+        picture?: string;
+      };
       if (!info.email || !info.email_verified) {
         throw AppError.badRequest(ErrorCode.OAUTH_EMAIL_UNVERIFIED, "Your Google account email is not verified");
       }
@@ -124,6 +143,10 @@ const providers = {
         emailVerified: true,
         displayName: info.name?.trim() || info.email.split("@")[0]!,
         handleHint: null,
+        // Google is identity only, not a professional profile: no username / profile URL.
+        username: null,
+        avatarUrl: info.picture || null,
+        profileUrl: null,
         // Google's token is not needed after sign-in; nothing to store.
         accessToken: "",
         scopes: token.scope ?? "",

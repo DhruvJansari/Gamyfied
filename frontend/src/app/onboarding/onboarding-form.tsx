@@ -112,7 +112,8 @@ export function OnboardingForm() {
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     if (!goal || !canContinue.categories) return;
-    submit.mutate({ stack, goal, categories }, { onSuccess: () => router.replace("/") });
+    // Straight into placement: the profile page is where the next 30 minutes happen.
+    submit.mutate({ stack, goal, categories }, { onSuccess: () => router.replace("/profile") });
   }
 
   const fieldErrors = isApiError(submit.error) ? submit.error.fields : {};

@@ -12,9 +12,11 @@
 :root {
   color-scheme: light;
 
+  /* Page background sits one step below the cards so white surfaces read as cards. */
+  --page: #f3f4f6;
   --canvas: #ffffff;
-  --surface-soft: #f8fafc;
-  --surface-strong: #e0e2e6;
+  --surface-soft: #ffffff;
+  --surface-strong: #e5e7eb;
   --surface-dark: #181d26;
   --surface-dark-elevated: #1d1f25;
 
@@ -35,11 +37,25 @@
   --info-border: #458fff;
   --success: #006400;
   --success-border: #39bf45;
+
+  /* Score / progress accent. Same hue as the link colour so it stays inside the system's
+     palette (DESIGN.md: no accents beyond the documented ones). */
+  --accent: #1b61c9;
+  --accent-soft: #e4ecfa;
+  --warn: #b45309;
+  --warn-soft: #fdebd3;
+
+  /* Profile hero wash behind the particle field (components/hero-field.tsx):
+     a quiet grey that leans faintly blue, then faintly lavender. */
+  --banner-from: #eaedf2;
+  --banner-mid: #e3e9f4;
+  --banner-to: #ebe8f3;
 }
 
 .dark {
   color-scheme: dark;
 
+  --page: #0b0e12;
   --canvas: #0f1216;
   --surface-soft: #181d26;
   --surface-strong: #242a33;
@@ -64,6 +80,15 @@
   --info-border: #458fff;
   --success: #39bf45;
   --success-border: #39bf45;
+
+  --accent: #6ea3ff;
+  --accent-soft: #172642;
+  --warn: #f5b26b;
+  --warn-soft: #3a2a14;
+
+  --banner-from: #141921;
+  --banner-mid: #182031;
+  --banner-to: #1f1e2c;
 }
 
 @theme inline {
@@ -75,6 +100,7 @@
   --default-font-weight: 400;
 
   /* Theme-aware colours → bg-canvas, text-ink, border-hairline, dark: variants, etc. */
+  --color-page: var(--page);
   --color-canvas: var(--canvas);
   --color-surface-soft: var(--surface-soft);
   --color-surface-strong: var(--surface-strong);
@@ -98,6 +124,13 @@
   --color-info-border: var(--info-border);
   --color-success: var(--success);
   --color-success-border: var(--success-border);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-banner-from: var(--banner-from);
+  --color-banner-mid: var(--banner-mid);
+  --color-banner-to: var(--banner-to);
 
   /* Signature card surfaces — brand voltage. Same in both themes; they always
      carry their own on-surface text colour (on-dark for coral/forest, ink for the pastels). */
@@ -126,7 +159,7 @@
    emphasis comes from size and colour contrast, not boldness (DESIGN.md). */
 @layer base {
   body {
-    @apply bg-canvas text-body;
+    @apply bg-page text-body;
   }
 
   h1,

@@ -95,21 +95,49 @@ Short questionnaire immediately after first sign-in:
 
 Output seeds their category placement and their starting profile template.
 
-### 5.4 Profile workspace
+### 5.4 Profile, placement and profile score
 
-This is not a profile form. It is a code editor.
+The profile is the product's centre, not a settings page. It lives at `/profile` (the
+owner's view: edit everything, see placement progress and why the score is what it is)
+and `/u/[handle]` (the public view, guests welcome, server-rendered).
 
-- User writes **raw HTML, CSS and JS** to build their own portfolio page
-- Live preview alongside the editor
-- Save, revert, and a published-vs-draft state
-- Starter templates for people who don't want to start blank
-- They also get to style **their own row strip on the leaderboard**, so creativity
-  shows up even in the ranking list
+The one idea behind all of it:
 
-**Hard constraint:** user code renders on a separate origin from the main app, inside
-a sandboxed iframe. Never on the main domain. If user JS runs where our session
-cookies live, one user can steal every session on the site. This decision has to be
-made before the first line of the editor is written, because it cannot be retrofitted.
+> A profile is not valuable because it is complete. It becomes valuable as its contents
+> get harder to fake and better supported by evidence.
+
+**Placement — the gate.** A new user is unranked and off the leaderboard until they finish
+three short tasks (the whole thing should take under thirty minutes):
+
+| # | Task                                | Required | Done when                                    |
+| - | ----------------------------------- | -------- | -------------------------------------------- |
+| 1 | Basic profile                       | yes      | headline + a 40-character bio                |
+| 2 | Social / professional identity      | yes      | one supported platform link (max 4)          |
+| 3 | Projects / work evidence            | yes      | one project with a description (max 5)       |
+| 4 | Community / collaboration           | **no**   | optional, skippable, never penalised (max 5) |
+
+3/3 required → ranked, permanently. Placement awards no points; it only decides eligibility.
+Everything else — external activity, project verification, employment — is a scoring
+dimension inside its task, never a further gate.
+
+**Profile score — the reputation.** Every item declares a maximum and earns a fraction of
+it based on evidence: `points = max × evidenceFactor`.
+
+- A typed social link is a *claim* (20%). Signing in with that platform makes it *linked*
+  (60%). Agent verification makes it *verified* (100%).
+- A project with only a description earns 10% of its maximum; with a repository or live
+  link 25%; with both 35%; verified, up to 100%. Private / organisation projects are capped
+  at 25% because the agent cannot inspect them.
+- Adding, removing and re-adding earns nothing: the score is recomputed from current
+  state on every write and stored with an explanation the user can expand line by line.
+
+`total = 1000 (base) + profile score` today; activity and event scores are separate
+domains added later. Numbers are in `Server/src/modules/scoring/scoring.config.ts`.
+
+**Custom portfolio page (later, optional).** The earlier idea of a raw HTML/CSS/JS
+portfolio editor is deferred and becomes an optional section linked from the profile, not
+the profile itself. When it arrives, the hard constraint stands: user code renders on a
+separate origin inside a sandboxed iframe, never where session cookies live.
 
 ### 5.5 Agentic verification layer
 
@@ -126,8 +154,11 @@ A user adds claims to their profile. For each one, the agent checks:
 
 Rules:
 
-- Claims that cannot be verified stay visible on the profile but **earn zero points**
-- Verification is a background job, not a request. It takes seconds to minutes.
+- Claims that cannot be verified stay visible on the profile and earn only a **small
+  fraction** of their possible score (see §5.4); linking and verification unlock the rest
+- Verification is a background job, not a request. It takes seconds to minutes. Today the
+  "Verify" button queues a request behind a provider interface
+  (`Server/src/modules/verification/provider.ts`); the agent implements that interface later
 - Results are cached. Re-verification happens on a schedule, because a profile
   verified in January is a lie by June.
 - Weighting favours things that are expensive to fake (months of commit history,
@@ -268,14 +299,19 @@ Redis is never the source of truth. It must always be rebuildable from Postgres.
 Not final, but the shape we are working toward:
 
 ```
-users              id, user_id (#7K2M9QX), email, display_name, handle, created_at
-accounts           user_id, provider (google|github|local), provider_account_id
-profiles           user_id, html, css, js, published_at, draft_updated_at
-leaderboard_rows   user_id, css, published_at
-claims             id, user_id, type (website|github|leetcode|linkedin), url, added_at
-verifications      id, claim_id, status, score, evidence (jsonb), verified_at, expires_at
-scores             user_id, verified_points, activity_points, total, updated_at
+users              id, public_id (#7K2M9QX), email, display_name, handle, created_at
+accounts           user_id, provider (google|github), provider_account_id, provider_username, avatar_url, profile_url
+onboarding         user_id, stack[], goal, categories[]
+profiles           user_id, avatar_url, headline, bio, location, website_url, years_of_experience
+social_links       id, user_id, platform, url, username, trust_level (claimed|linked|verified), account_id
+projects           id, user_id, name, description, technologies[], repo_url, live_url, project_type, verification_status
+participations     id, user_id, kind, title, note, url, year, verification_status
+verifications      id, user_id, subject_type, subject_id, status, source, signals (jsonb), result (jsonb), points, expires_at
+profile_scores     user_id, points, breakdown (jsonb), rules_version, computed_at
+scores             user_id, base, total, is_ranked, ranked_at            (+ activity_scores, event_scores later)
 rank_snapshots     user_id, rank, tier, captured_at
+portfolio_pages    user_id, html, css, js, published_at                  (deferred, see §5.4)
+leaderboard_rows   user_id, css, published_at                           (deferred)
 clans              id, name, tag, owner_id, created_at
 clan_members       clan_id, user_id, role, joined_at
 events             id, type (battle|minigame|theme_contest), festival, starts_at, ends_at
@@ -293,8 +329,8 @@ ask constantly, and which is impossible to answer from current state alone.
 ## 8. Build order
 
 **Phase 1 — the core loop**
-Auth → permanent user ID → onboarding → profile workspace → verification for GitHub
-only → score → single global leaderboard with tiers.
+Auth → permanent user ID → onboarding → profile + placement + profile score (done) →
+verification for GitHub only → single global leaderboard with tiers.
 
 Nothing else. If this slice is not compelling, no amount of clan battles will save it.
 
@@ -343,5 +379,6 @@ Four rules that do not bend, whatever the deadline pressure:
 1. **User code never runs on the main origin.** Separate domain, sandboxed iframe.
 2. **Site-wide themes are CSS and config only.** No user JS on other people's screens.
 3. **The permanent user ID is never reused and never changes.**
-4. **Unverified claims score zero.** The moment we score something we did not check,
-   the product has no reason to exist.
+4. **Unverified claims earn only a small fraction of their possible score.** Only a linked
+   identity or independent verification unlocks full value. The moment an unchecked claim
+   is worth as much as a checked one, the product has no reason to exist.

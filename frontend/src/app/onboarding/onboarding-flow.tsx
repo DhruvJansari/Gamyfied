@@ -16,7 +16,7 @@ export function OnboardingFlow() {
 
   const isOnboarded = me.data?.onboardedAt != null;
   useEffect(() => {
-    if (isOnboarded) router.replace("/");
+    if (isOnboarded) router.replace("/profile");
   }, [isOnboarded, router]);
 
   if (me.isPending || isOnboarded) {

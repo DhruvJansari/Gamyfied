@@ -21,8 +21,13 @@ export type Me = {
   onboarding: Onboarding | null;
 };
 
+export type UpdateMeInput = { displayName?: string; handle?: string };
+
 export const usersService = {
   getMe(): Promise<Me> {
     return request({ method: "GET", url: endpoints.users.me });
+  },
+  updateMe(input: UpdateMeInput): Promise<Me> {
+    return request({ method: "PATCH", url: endpoints.users.me, data: input });
   },
 };

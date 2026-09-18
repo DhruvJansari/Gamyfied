@@ -6,7 +6,8 @@ import { NextResponse, type NextRequest } from "next/server";
 const SESSION_MARKER_COOKIE = "gf_session";
 
 const AUTH_PAGES = ["/sign-in", "/sign-up", "/verify"];
-const PROTECTED_PREFIXES = ["/onboarding", "/workspace", "/settings"];
+// /u/[handle] is deliberately absent: public profiles are for guests too.
+const PROTECTED_PREFIXES = ["/onboarding", "/profile", "/workspace", "/settings"];
 
 export function proxy(request: NextRequest): NextResponse {
   const { pathname, search } = request.nextUrl;
@@ -26,5 +27,5 @@ export function proxy(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ["/sign-in", "/sign-up", "/verify", "/onboarding/:path*", "/workspace/:path*", "/settings/:path*"],
+  matcher: ["/sign-in", "/sign-up", "/verify", "/onboarding/:path*", "/profile/:path*", "/workspace/:path*", "/settings/:path*"],
 };

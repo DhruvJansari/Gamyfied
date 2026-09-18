@@ -103,7 +103,9 @@ including for one-off calls and quick experiments.
 
 **The client.** Exactly one axios instance for the whole app. It owns the base URL,
 the timeout, credentials, the auth header, and error normalization. Nothing else
-creates an axios instance.
+creates an axios instance. Server components that need a public, cookie-less read (the
+public profile page) use `lib/api/server.ts`, which takes the same endpoint paths and
+throws the same `ApiError`; it is the only other place a request is made.
 
 **The services.** One file per domain. Each function maps to one endpoint and does
 nothing else — no business logic, no state, no formatting.

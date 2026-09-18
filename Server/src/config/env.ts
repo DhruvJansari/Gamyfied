@@ -24,6 +24,18 @@ function hexKey(name: string, bytes: number): Buffer {
 
 const nodeEnv = process.env.NODE_ENV ?? "development";
 
+const MOCK_OUTCOMES = ["VERIFIED", "PARTIALLY_VERIFIED", "FAILED", "INACCESSIBLE"] as const;
+type MockOutcome = (typeof MOCK_OUTCOMES)[number];
+
+function mockOutcome(): MockOutcome | null {
+  const raw = optional("VERIFICATION_MOCK_OUTCOME");
+  if (!raw) return null;
+  if (!(MOCK_OUTCOMES as readonly string[]).includes(raw)) {
+    throw new Error(`[env] VERIFICATION_MOCK_OUTCOME must be one of ${MOCK_OUTCOMES.join(", ")}`);
+  }
+  return raw as MockOutcome;
+}
+
 export const env = {
   nodeEnv,
   isProduction: nodeEnv === "production",
@@ -64,4 +76,10 @@ export const env = {
     smsGatewayUser: optional("SMS_GATEWAY_USER"),
     smsGatewayPass: optional("SMS_GATEWAY_PASS"),
   },
+
+  /**
+   * Dev only: makes the placeholder verification provider return this outcome immediately
+   * instead of leaving requests queued. Ignored in production.
+   */
+  verificationMockOutcome: mockOutcome(),
 } as const;

@@ -6,7 +6,7 @@ export const THEME_STORAGE_KEY = "gamyfied:theme";
 export const THEME_OPTIONS = ["light", "dark", "system"] as const;
 export type Theme = (typeof THEME_OPTIONS)[number];
 
-export const DEFAULT_THEME: Theme = "dark";
+export const DEFAULT_THEME: Theme = "light";
 
 /** Applies `.dark` to <html> from the stored preference. Idempotent, safe to call on change. */
 export function applyTheme(theme: Theme): void {

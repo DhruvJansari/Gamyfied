@@ -1,8 +1,8 @@
 import { prisma } from "../../config/db";
 import type { Provider } from "../../generated/prisma/enums";
-import type { User } from "../../generated/prisma/client";
+import type { Account, User } from "../../generated/prisma/client";
 
-export type { User };
+export type { Account, User };
 
 export type CreateUserInput = {
   publicId: string;
@@ -37,8 +37,13 @@ export const usersRepository = {
       .then((account) => account?.user ?? null);
   },
 
+  /** A user is born with an empty profile and the base score — one nested write, atomic. */
   create(input: CreateUserInput): Promise<User> {
-    return prisma.user.create({ data: input });
+    return prisma.user.create({ data: { ...input, profile: { create: {} }, score: { create: {} } } });
+  },
+
+  updateIdentity(id: string, input: { displayName?: string; handle?: string }): Promise<User> {
+    return prisma.user.update({ where: { id }, data: input });
   },
 
   markEmailVerified(id: string): Promise<User> {
@@ -55,13 +60,16 @@ export const usersRepository = {
     providerAccountId: string;
     accessTokenEnc: string | null;
     scopes: string | null;
-  }): Promise<void> {
-    return prisma.account
-      .upsert({
-        where: { provider_providerAccountId: { provider: input.provider, providerAccountId: input.providerAccountId } },
-        create: input,
-        update: { accessTokenEnc: input.accessTokenEnc, scopes: input.scopes },
-      })
-      .then(() => undefined);
+    providerUsername: string | null;
+    avatarUrl: string | null;
+    profileUrl: string | null;
+  }): Promise<Account> {
+    const { userId, provider, providerAccountId, ...refreshed } = input;
+    return prisma.account.upsert({
+      where: { provider_providerAccountId: { provider, providerAccountId } },
+      create: input,
+      // Everything except the identity refreshes on each sign-in (renamed account, new avatar…).
+      update: refreshed,
+    });
   },
 };

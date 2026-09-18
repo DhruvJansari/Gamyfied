@@ -18,4 +18,23 @@ export const endpoints = {
   onboarding: {
     submit: "/api/onboarding",
   },
+  profiles: {
+    /** GET = owner view, PUT = update fields. */
+    me: "/api/profiles/me",
+    byHandle: (handle: string) => `/api/profiles/${encodeURIComponent(handle)}`,
+  },
+  socialLinks: {
+    create: "/api/social-links",
+    byId: (id: string) => `/api/social-links/${id}`,
+  },
+  projects: {
+    create: "/api/projects",
+    byId: (id: string) => `/api/projects/${id}`,
+    verifications: (id: string) => `/api/projects/${id}/verifications`,
+  },
+  participations: {
+    create: "/api/participations",
+    byId: (id: string) => `/api/participations/${id}`,
+    verifications: (id: string) => `/api/participations/${id}/verifications`,
+  },
 } as const;

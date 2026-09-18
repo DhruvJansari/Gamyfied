@@ -4,6 +4,9 @@ import { Prisma } from "../../generated/prisma/client";
 import { encrypt } from "../../lib/crypto";
 import { AppError, ErrorCode } from "../../lib/errors";
 import { generatePublicId } from "../../lib/public-id";
+import { profilesService } from "../profiles/profiles.service";
+import { scoringService } from "../scoring/scoring.service";
+import { socialLinksService } from "../social-links/social-links.service";
 import { usersRepository, type CreateUserInput, type User } from "../users/users.repository";
 import { usersService } from "../users/users.service";
 import type { SendOtpInput, VerifyOtpInput } from "./auth.schemas";
@@ -141,13 +144,24 @@ export const authService = {
       }
     }
 
-    await usersRepository.linkProviderAccount({
+    const account = await usersRepository.linkProviderAccount({
       userId: user.id,
       provider: profile.provider,
       providerAccountId: profile.providerAccountId,
       accessTokenEnc: profile.accessToken ? encrypt(profile.accessToken) : null,
       scopes: profile.scopes || null,
+      providerUsername: profile.username,
+      avatarUrl: profile.avatarUrl,
+      profileUrl: profile.profileUrl,
     });
+
+    // The signed-in identity is the strongest evidence we have: it becomes (or upgrades) the
+    // LINKED social link for that platform, fills an empty avatar, and the score follows.
+    await Promise.all([
+      socialLinksService.upsertLinkedFromAccount(user.id, account),
+      profilesService.seedAvatar(user.id, account.avatarUrl),
+    ]);
+    await scoringService.recomputeProfileScore(user.id);
 
     const tokens = await sessionsService.issueSession(user, client);
     return { user, tokens, isNewUser };

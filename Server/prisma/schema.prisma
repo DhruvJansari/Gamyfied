@@ -12,7 +12,7 @@ datasource db {
 }
 
 // Models land here as each phase is built (see frontend/project/Context.md §7).
-// Auth design: Project/Auth.md.
+// Auth design: Project/Auth.md. Profile / placement / scoring: Context.md §5.4.
 
 enum Role {
   USER
@@ -40,9 +40,16 @@ model User {
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  accounts   Account[]
-  sessions   Session[]
-  onboarding Onboarding?
+  accounts       Account[]
+  sessions       Session[]
+  onboarding     Onboarding?
+  profile        Profile?
+  socialLinks    SocialLink[]
+  projects       Project[]
+  participations Participation[]
+  verifications  Verification[]
+  profileScore   ProfileScore?
+  score          Score?
 
   @@map("users")
 }
@@ -55,9 +62,14 @@ model Account {
   /// Provider access token, AES-256-GCM encrypted. GitHub's is needed later for verification.
   accessTokenEnc    String?  @map("access_token_enc")
   scopes            String?
+  /// Public identity at the provider (GitHub login). Seeds the LINKED social link.
+  providerUsername  String?  @map("provider_username") @db.VarChar(100)
+  avatarUrl         String?  @map("avatar_url") @db.VarChar(500)
+  profileUrl        String?  @map("profile_url") @db.VarChar(500)
   createdAt         DateTime @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  socialLinks SocialLink[]
 
   @@unique([provider, providerAccountId])
   @@index([userId])
@@ -119,4 +131,209 @@ model Onboarding {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("onboarding")
+}
+
+// ---------------------------------------------------------------------------------------
+// Profile phase (plan: profile / placement / scoring). The principle behind every table:
+// the harder a fact is to fake, the more it is worth. Score is always recomputed from the
+// current rows below — nothing here accrues points per action.
+// ---------------------------------------------------------------------------------------
+
+/// What the user says about themselves. One row per user, created with the user.
+model Profile {
+  userId            String   @id @map("user_id") @db.Uuid
+  avatarUrl         String?  @map("avatar_url") @db.VarChar(500)
+  headline          String?  @db.VarChar(120)
+  bio               String?  @db.VarChar(2000)
+  location          String?  @db.VarChar(80)
+  websiteUrl        String?  @map("website_url") @db.VarChar(500)
+  yearsOfExperience Int?     @map("years_of_experience")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+/// Platforms a social link may point at. Adding one = new enum value + registry entry
+/// in src/shared/social-platforms.ts. Arbitrary websites are deliberately not accepted.
+enum SocialPlatform {
+  GITHUB
+  GITLAB
+  LINKEDIN
+  LEETCODE
+  CODEFORCES
+  STACKOVERFLOW
+  HACKERRANK
+  KAGGLE
+  DEVTO
+  HASHNODE
+  MEDIUM
+  X
+}
+
+/// How much we trust that a claim is really theirs.
+/// CLAIMED = typed a URL. LINKED = signed in with that account. VERIFIED = agent checked it.
+enum TrustLevel {
+  CLAIMED
+  LINKED
+  VERIFIED
+}
+
+/// One per platform per user. LINKED rows are owned by the OAuth account, not the form.
+model SocialLink {
+  id         String         @id @default(uuid()) @db.Uuid
+  userId     String         @map("user_id") @db.Uuid
+  platform   SocialPlatform
+  /// Canonical form, e.g. https://github.com/octocat
+  url        String         @db.VarChar(500)
+  username   String         @db.VarChar(100)
+  trustLevel TrustLevel     @default(CLAIMED) @map("trust_level")
+  /// Set when LINKED: the OAuth account this link came from.
+  accountId  String?        @map("account_id") @db.Uuid
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account Account? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, platform])
+  @@map("social_links")
+}
+
+/// PUBLIC = anyone (and the agent) can open it. PRIVATE = org / auth-walled; capped score.
+enum ProjectType {
+  PUBLIC
+  PRIVATE
+}
+
+/// Where a claim stands with independent verification. Denormalised onto the subject row
+/// for cheap display; the full history lives in `verifications`.
+enum VerificationStatus {
+  NOT_VERIFIED
+  VERIFICATION_PENDING
+  VERIFIED
+  PARTIALLY_VERIFIED
+  FAILED
+  INACCESSIBLE
+}
+
+model Project {
+  id                 String             @id @default(uuid()) @db.Uuid
+  userId             String             @map("user_id") @db.Uuid
+  name               String             @db.VarChar(80)
+  description        String             @db.VarChar(2000)
+  technologies       String[]
+  repoUrl            String?            @map("repo_url") @db.VarChar(500)
+  liveUrl            String?            @map("live_url") @db.VarChar(500)
+  projectType        ProjectType        @default(PUBLIC) @map("project_type")
+  verificationStatus VerificationStatus @default(NOT_VERIFIED) @map("verification_status")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("projects")
+}
+
+enum ParticipationKind {
+  HACKATHON
+  OPEN_SOURCE
+  COMMUNITY
+  EVENT
+  FREELANCE
+  COLLABORATION
+  OTHER
+}
+
+/// Optional placement task: hackathons, open source, communities, freelance… Skipping it
+/// costs nothing; a linked entry is worth a little, a verified one more.
+model Participation {
+  id                 String             @id @default(uuid()) @db.Uuid
+  userId             String             @map("user_id") @db.Uuid
+  kind               ParticipationKind
+  title              String             @db.VarChar(80)
+  note               String?            @db.VarChar(500)
+  /// Evidence link: Devpost page, merged PR, meetup page, client site…
+  url                String?            @db.VarChar(500)
+  year               Int?
+  verificationStatus VerificationStatus @default(NOT_VERIFIED) @map("verification_status")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("participations")
+}
+
+enum VerificationSubject {
+  PROJECT
+  SOCIAL_LINK
+  PARTICIPATION
+}
+
+/// MOCK = queued by this phase's placeholder provider. AGENT = the real thing, later.
+enum VerificationSource {
+  MOCK
+  AGENT
+}
+
+/// One row per verification attempt on a project / link / participation. The agent (later)
+/// fills `signals` (raw evidence), `result` (its evaluation) and `points` (what the scoring
+/// engine awarded from them). Only the latest completed row per subject counts.
+model Verification {
+  id          String              @id @default(uuid()) @db.Uuid
+  userId      String              @map("user_id") @db.Uuid
+  subjectType VerificationSubject @map("subject_type")
+  subjectId   String              @map("subject_id") @db.Uuid
+  status      VerificationStatus  @default(VERIFICATION_PENDING)
+  source      VerificationSource
+  requestedAt DateTime            @default(now()) @map("requested_at")
+  completedAt DateTime?           @map("completed_at")
+  /// After this, the result is stale and re-verification is due (scheduler: later phase).
+  expiresAt   DateTime?           @map("expires_at")
+  signals     Json?
+  result      Json?
+  points      Int?
+  errorCode   String?             @map("error_code") @db.VarChar(64)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([subjectType, subjectId, requestedAt])
+  @@index([userId])
+  @@map("verifications")
+}
+
+/// Profile-domain score. Recomputed from current state on every profile write; `breakdown`
+/// is the explanation shown to the user. Future domains (activity, event) get sibling tables.
+model ProfileScore {
+  userId       String   @id @map("user_id") @db.Uuid
+  points       Int      @default(0)
+  breakdown    Json
+  /// Which scoring.config.ts version produced this — lets a retune recompute everyone.
+  rulesVersion Int      @map("rules_version")
+  computedAt   DateTime @default(now()) @map("computed_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profile_scores")
+}
+
+/// Aggregate: total = base + Σ domain scores. `isRanked` is the placement gate for the
+/// leaderboard and is sticky once set. Score ≠ rank ≠ tier — rank/tier are derived later.
+model Score {
+  userId    String    @id @map("user_id") @db.Uuid
+  base      Int       @default(1000)
+  total     Int       @default(1000)
+  isRanked  Boolean   @default(false) @map("is_ranked")
+  rankedAt  DateTime? @map("ranked_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([isRanked, total])
+  @@map("scores")
 }
