@@ -1,3 +1,4 @@
+import { env } from "../../config/env";
 import { redis } from "../../config/redis";
 import { randomOtp, safeEqual, sha256 } from "../../lib/crypto";
 import { AppError, ErrorCode } from "../../lib/errors";
@@ -18,6 +19,12 @@ const sendsKey = (channel: Channel, id: string) => `otp-sends:${channel}:${sha25
 // requests a new code. That is why OTPs never touch Postgres (Project/Rules.md, Data).
 export const otpService = {
   async sendCode(channel: Channel, identifier: string, profile?: PendingProfile): Promise<void> {
+    // No SMS gateway is configured right now (Project/Rules.md notes it's optional). Fail
+    // clearly before touching Redis, so the frontend can point the user at email instead.
+    if (channel === "phone" && !env.otp.smsGatewayUrl) {
+      throw AppError.badRequest(ErrorCode.SMS_UNAVAILABLE, "SMS sign-in is unavailable right now. Use your email instead.");
+    }
+
     const key = otpKey(channel, identifier);
 
     const sentAt = await redis.hget(key, "sentAt");

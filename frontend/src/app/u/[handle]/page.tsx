@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   if (!profile) return { title: "Profile not found" };
   return {
     title: `${profile.displayName} (@${profile.handle})`,
-    description: profile.profile.headline ?? `${profile.displayName} on Gamyfied`,
+    description: profile.profile.headline ?? `${profile.displayName} on StandByDev`,
   };
 }
 

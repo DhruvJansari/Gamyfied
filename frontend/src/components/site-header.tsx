@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { useLogout, useMe } from "@/hooks/use-auth";
 
@@ -15,11 +15,15 @@ export function SiteHeader() {
   const me = useMe();
   const logout = useLogout();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // The landing page renders its own header (app/_landing/landing-header.tsx).
+  if (pathname === "/") return null;
 
   return (
     <header className="flex items-center justify-between gap-4 px-6 py-4 md:px-10">
       <Link href="/" className="text-ink text-lg tracking-tight no-underline">
-        Gamyfied
+        StandByDev
       </Link>
 
       <nav aria-label="Primary" className="hidden items-center gap-1 rounded-lg border border-hairline bg-surface-soft px-2 py-1 md:flex">

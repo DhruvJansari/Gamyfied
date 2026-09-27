@@ -23,7 +23,7 @@ export function ParticipationsSection({ profile }: { profile: OwnerProfile }) {
   if (skipped && entries.length === 0) {
     return (
       <div id="community" className="flex scroll-mt-24 items-center justify-between gap-4 rounded-lg border border-hairline px-5 py-3">
-        <small className="text-muted">Community & collaboration — skipped. It never counts against you.</small>
+        <small className="text-muted">Community & collaboration skipped. It never counts against you.</small>
         <button type="button" onClick={() => setSkipped(false)} className="text-sm text-link underline-offset-4 hover:underline">
           Add something
         </button>
@@ -37,7 +37,7 @@ export function ParticipationsSection({ profile }: { profile: OwnerProfile }) {
       title="Community & collaboration"
       optional
       count={`${entries.length} of ${PARTICIPATIONS_MAX}`}
-      hint="Hackathons, open source, meetups, freelance work. Add what you have — with a link if possible — or skip it. Skipping costs nothing."
+      hint="Hackathons, open source, meetups, freelance work. Add what you have (with a link if possible) or skip it. Skipping costs nothing."
       action={
         !adding && !isFull ? (
           <SecondaryButton onClick={() => setAdding(true)} className="h-10">
@@ -166,7 +166,7 @@ function ParticipationForm({ entry, onDone }: { entry?: Participation; onDone: (
             ))}
           </select>
         </div>
-        <FormField label="Title" name="title" placeholder="HackMIT 2025 — 2nd place" value={form.title} onChange={set("title")} maxLength={80} error={fields.title} autoFocus />
+        <FormField label="Title" name="title" placeholder="HackMIT 2025, 2nd place" value={form.title} onChange={set("title")} maxLength={80} error={fields.title} autoFocus />
       </div>
       <div className="grid gap-5 md:grid-cols-[1fr_minmax(0,8rem)]">
         <FormField label="Link" name="url" hint="Devpost page, merged PR, event page…" type="url" placeholder="https://" value={form.url} onChange={set("url")} error={fields.url} />

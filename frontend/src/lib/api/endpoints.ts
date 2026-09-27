@@ -37,4 +37,10 @@ export const endpoints = {
     byId: (id: string) => `/api/participations/${id}`,
     verifications: (id: string) => `/api/participations/${id}/verifications`,
   },
+  leaderboard: {
+    page: (board: string, page: number, tier: string | null) =>
+      `/api/leaderboard?board=${encodeURIComponent(board)}&page=${page}${tier ? `&tier=${encodeURIComponent(tier)}` : ""}`,
+    search: (board: string, q: string) => `/api/leaderboard/search?board=${encodeURIComponent(board)}&q=${encodeURIComponent(q)}`,
+    me: (board: string) => `/api/leaderboard/me?board=${encodeURIComponent(board)}`,
+  },
 } as const;

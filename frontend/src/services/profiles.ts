@@ -1,5 +1,6 @@
 import { request } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
+import type { Ranking } from "./leaderboard";
 import type { Participation, ParticipationKind } from "./participations";
 import type { Project, ProjectType, VerificationStatus } from "./projects";
 import type { SocialLink, TrustLevel } from "./social-links";
@@ -72,6 +73,8 @@ type ProfileShared = {
   socialLinks: SocialLink[];
   projects: Project[];
   participations: Participation[];
+  /** Score ≠ rank ≠ tier: this is the position, looked up fresh on every read. Null while unranked. */
+  ranking: Ranking | null;
 };
 
 /** What anyone can see at /u/[handle]. */

@@ -50,6 +50,27 @@
   --banner-from: #eaedf2;
   --banner-mid: #e3e9f4;
   --banner-to: #ebe8f3;
+
+  /* Signature surfaces: brand voltage. Declared here once and never under .dark, because
+     they do not flip; each carries its own on-colour. Real custom properties (not only
+     @theme values) so components can hand them to inline styles and animation props. */
+  --signature-coral: #aa2d00;
+  --signature-coral-deep: #7c2200;
+  --signature-cream: #f5e9d4;
+  --signature-paper: #fffaf2;
+  --signature-peach: #fcab79;
+  --signature-yellow: #f4d35e;
+  --signature-mustard: #d9a441;
+  --signature-mint: #a8d8c4;
+  --signature-forest: #0a2e0e;
+  /* Landing page blues: a deep navy for the quiet bands and the standing card, the electric
+     brand blue for the loud one, and a lifted blue that stays readable on navy. */
+  --signature-navy: #0b1430;
+  --signature-navy-raised: #16224a;
+  --signature-blue: #1d4ed8;
+  --signature-blue-bright: #7aa0ff;
+  /* Ink on cream and pastel surfaces. Light-theme ink, fixed in both themes. */
+  --on-pastel: #181d26;
 }
 
 .dark {
@@ -132,15 +153,22 @@
   --color-banner-mid: var(--banner-mid);
   --color-banner-to: var(--banner-to);
 
-  /* Signature card surfaces — brand voltage. Same in both themes; they always
-     carry their own on-surface text colour (on-dark for coral/forest, ink for the pastels). */
-  --color-signature-coral: #aa2d00;
-  --color-signature-forest: #0a2e0e;
-  --color-signature-cream: #f5e9d4;
-  --color-signature-peach: #fcab79;
-  --color-signature-mint: #a8d8c4;
-  --color-signature-yellow: #f4d35e;
-  --color-signature-mustard: #d9a441;
+  /* Signature surfaces (values on :root above). Same in both themes; they always carry
+     their own on-surface text colour (on-dark for coral/navy/blue, on-pastel for the pastels). */
+  --color-signature-coral: var(--signature-coral);
+  --color-signature-coral-deep: var(--signature-coral-deep);
+  --color-signature-forest: var(--signature-forest);
+  --color-signature-cream: var(--signature-cream);
+  --color-signature-paper: var(--signature-paper);
+  --color-signature-peach: var(--signature-peach);
+  --color-signature-mint: var(--signature-mint);
+  --color-signature-yellow: var(--signature-yellow);
+  --color-signature-mustard: var(--signature-mustard);
+  --color-signature-navy: var(--signature-navy);
+  --color-signature-navy-raised: var(--signature-navy-raised);
+  --color-signature-blue: var(--signature-blue);
+  --color-signature-blue-bright: var(--signature-blue-bright);
+  --color-on-pastel: var(--on-pastel);
 
   /* Radius scale: xs legal/system, sm inputs, md content cards, lg CTAs + signature cards.
      `pill` is reserved for the pricing sub-system. */
@@ -148,6 +176,8 @@
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 12px;
+  /* Sheets and docks that sit against a screen edge. */
+  --radius-xl: 20px;
   --radius-pill: 9999px;
 
   /* Vertical rhythm between major bands → py-section */
@@ -195,5 +225,179 @@
 
   a {
     @apply text-link active:text-link-active;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Landing page materials (src/app/_landing). Kept here because they are textures
+   and motion rules, not components, and they must read the colour tokens.
+   --------------------------------------------------------------------------- */
+
+/* Scroll reveal. Hidden only when scripts run, so no-JS visitors see everything; and
+   reduced-motion visitors get the content with no movement at all. */
+@media (scripting: enabled) {
+  .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 700ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .reveal[data-shown] {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* Hero load-in. Pure CSS so the first screen paints before hydration (no JS gate on LCP). */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise-in {
+  animation: rise-in 800ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rise-in {
+    animation: none;
+  }
+}
+
+/* Film grain for the signature bands: a static fractal-noise tile, not a pattern, so the
+   big colour fields read as material instead of flat fills. */
+.texture-grain {
+  position: relative;
+  isolation: isolate;
+}
+.texture-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Shiny text (after React Bits' ShinyText), done in CSS so it costs no frame loop. A light
+   band crosses the word, then rests off-screen for most of the cycle. */
+@keyframes shiny-sweep {
+  0% {
+    background-position: 160% 50%;
+  }
+  45%,
+  100% {
+    background-position: -60% 50%;
+  }
+}
+.shiny-text {
+  background-image: linear-gradient(
+    105deg,
+    var(--shiny-base) 0%,
+    var(--shiny-base) 40%,
+    var(--shiny-light) 50%,
+    var(--shiny-base) 60%,
+    var(--shiny-base) 100%
+  );
+  background-size: 250% 100%;
+  background-position: 160% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shiny-sweep 5.5s cubic-bezier(0.4, 0, 0.2, 1) 1.2s infinite;
+}
+
+/* "Live" dot: one soft ring that grows and fades. */
+@keyframes live-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  75%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+.live-ping {
+  animation: live-ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Primary call to action: a light sheen crosses the button on hover. */
+.cta-sheen {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.cta-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--sheen, var(--on-dark)) 28%, transparent) 50%, transparent 70%);
+  transform: translateX(-130%);
+}
+@media (hover: hover) and (pointer: fine) {
+  .cta-sheen:hover::after {
+    transform: translateX(130%);
+    transition: transform 750ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+}
+
+/* A line that draws itself once (sparklines, underlines). Pair with pathLength="1". */
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.draw-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-line 1600ms cubic-bezier(0.65, 0, 0.35, 1) 600ms forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shiny-text,
+  .live-ping,
+  .draw-line {
+    animation: none;
+  }
+  .shiny-text {
+    color: var(--shiny-base);
+    background: none;
+  }
+  .draw-line {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Statement words start dim and are lit by scroll (app/_landing/statement.tsx). */
+@media (scripting: enabled) {
+  .scroll-word {
+    opacity: 0.18;
+    transition: opacity 140ms linear;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-word {
+    opacity: 1 !important;
   }
 }

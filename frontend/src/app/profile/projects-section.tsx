@@ -106,7 +106,7 @@ function ProjectCard({ project, item, onEdit }: { project: Project; item?: Score
 
       {item?.hint ? <small className="text-muted">{item.hint}</small> : null}
       {project.verificationStatus === "VERIFICATION_PENDING" ? (
-        <small className="text-muted">Queued — agent verification is coming soon. Your score will update when it runs.</small>
+        <small className="text-muted">Queued. Agent verification is coming soon. Your score will update when it runs.</small>
       ) : null}
 
       <div className="flex flex-wrap items-center gap-3 border-t border-hairline pt-3">

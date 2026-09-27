@@ -23,6 +23,12 @@ colors:
   signature-mint: "#a8d8c4"
   signature-yellow: "#f4d35e"
   signature-mustard: "#d9a441"
+  signature-coral-deep: "#7c2200"
+  signature-paper: "#fffaf2"
+  signature-navy: "#0b1430"
+  signature-navy-raised: "#16224a"
+  signature-blue: "#1d4ed8"
+  signature-blue-bright: "#7aa0ff"
   on-primary: "#ffffff"
   on-dark: "#ffffff"
   link: "#1b61c9"
@@ -327,6 +333,8 @@ These are the colors that carry Airtable's brand voltage. They appear as full-bl
 - **Forest** (`{colors.signature-forest}` — #0a2e0e): A deep-green signature card used in the homepage demo-grid cluster.
 - **Cream** (`{colors.signature-cream}` — #f5e9d4): The cream callout band ("The path to 10× every person in your organization") — a soft beige surface holding dark type and product UI fragments.
 - **Peach** (`{colors.signature-peach}` — #fcab79), **Mint** (`{colors.signature-mint}` — #a8d8c4), **Yellow** (`{colors.signature-yellow}` — #f4d35e), **Mustard** (`{colors.signature-mustard}` — #d9a441): Demo-card surfaces that carry small product UI fragments inside the multi-card grid sections.
+- **Landing page set** (added with the StandByDev landing, `src/app/_landing`): **Navy** (`{colors.signature-navy}` #0b1430) and **Navy Raised** (`{colors.signature-navy-raised}` #16224a) for the quiet dark bands and the standing card; **Blue** (`{colors.signature-blue}` #1d4ed8) for the one electric band and "you" highlights; **Blue Bright** (`{colors.signature-blue-bright}` #7aa0ff) for blue text and icons on navy; **Coral Deep** (`{colors.signature-coral-deep}` #7c2200) for raised surfaces on coral; **Paper** (`{colors.signature-paper}` #fffaf2) for white-ish surfaces on cream. Meaning is fixed: blue is you and your proof, warm (coral, yellow, peach) is competition. The landing uses no green or cyan; mint stays a product-only tier colour.
+- These values are real custom properties on `:root` in `globals.css` (`var(--signature-navy)` etc.), not only `@theme` entries, so components can pass them to inline styles and animation props.
 
 ### Semantic
 - **Link** (`{colors.link}` — #1b61c9): Inline body links and anchor text. Darker on press to `{colors.link-active}` (#1a3866). Despite the `--theme_button-background-primary` CSS-variable name, this color is **not** the primary button color — it is the link color.
@@ -335,7 +343,7 @@ These are the colors that carry Airtable's brand voltage. They appear as full-bl
 
 ## Dark Mode
 
-The reference system is light-only. Gamyfied ships both, and **the user picks** — theme is a setting (`light | dark | system`), not an OS sniff. The choice is stored under `THEME_STORAGE_KEY` (`src/lib/theme.ts`), applied as a `.dark` class on `<html>` by an inline script before first paint, and Tailwind's `dark:` variant is bound to that class in `globals.css`.
+The reference system is light-only. StandByDev ships both, and **the user picks** — theme is a setting (`light | dark | system`), not an OS sniff. The choice is stored under `THEME_STORAGE_KEY` (`src/lib/theme.ts`), applied as a `.dark` class on `<html>` by an inline script before first paint, and Tailwind's `dark:` variant is bound to that class in `globals.css`.
 
 **The rule that makes it work:** every colour in the front matter above is a *semantic role*, and every role has a light and a dark value defined once in `globals.css`. Components use the role utilities (`bg-canvas`, `text-ink`, `text-body`, `border-hairline`, `bg-primary text-on-primary`, …) and never a hex or a Tailwind palette colour (`zinc-50`, `black`). Do that and a component is dark-mode-correct without a single `dark:` prefix. Reach for `dark:` only for things that genuinely differ structurally — an inverted logo, a lighter shadow.
 
@@ -367,7 +375,7 @@ The reference system is light-only. Gamyfied ships both, and **the user picks** 
 ## Typography
 
 ### Font Family
-Gamyfied runs **Google Sans** (variable, 400–700) for everything, self-hosted through `next/font` and exposed as the single Tailwind utility `font-google-sans`. Fallback is `system-ui, sans-serif`. The original reference used Haas Grotesk with an Inter Display pricing dialect; both collapse to Google Sans here — the pricing sub-system keeps its `{rounded.pill}` shape but not a second typeface.
+StandByDev runs **Google Sans** (variable, 400–700) for everything, self-hosted through `next/font` and exposed as the single Tailwind utility `font-google-sans`. Fallback is `system-ui, sans-serif`. The original reference used Haas Grotesk with an Inter Display pricing dialect; both collapse to Google Sans here — the pricing sub-system keeps its `{rounded.pill}` shape but not a second typeface.
 
 **How the roles map to code.** The typography roles in the front matter describe intent, not utilities. Do not create `text-display-lg`-style classes. Text size comes from the semantic tag, styled once in `globals.css` `@layer base` (`h1` → display, `h2` → section, `h3`/`h4` → sub-sections, `p` → body, `small` → caption). Weight stays 400 on every heading; use `font-medium` (500) only for buttons, labels and card titles.
 

@@ -19,20 +19,21 @@ export const PARTICIPATION_KIND_LABEL: Record<ParticipationKind, string> = {
 // for a verification state, the same chip for a trust level. Same data, same logic, so they
 // live once (project/Rules.md, Component reuse).
 
-/** Photo if there is one, otherwise initials on the accent colour. */
-export function Avatar({ url, name, size = "md" }: { url: string | null; name: string; size?: "md" | "lg" }) {
+/** Photo if there is one, otherwise initials on the accent colour. `sm` is the list-row size. */
+export function Avatar({ url, name, size = "md" }: { url: string | null; name: string; size?: "sm" | "md" | "lg" }) {
   const initials = name
     .trim()
     .split(/\s+/)
     .slice(0, 2)
     .map((w) => w.charAt(0).toUpperCase())
     .join("") || "?";
-  const box = size === "lg" ? "size-24 text-3xl md:size-28 md:text-4xl" : "size-16 text-2xl";
+  const box = size === "lg" ? "size-24 text-3xl md:size-28 md:text-4xl" : size === "sm" ? "size-10 border-2 text-base" : "size-16 text-2xl";
+  const border = size === "sm" ? "" : "border-4";
   return url ? (
     // eslint-disable-next-line @next/next/no-img-element -- remote avatar hosts are not known ahead of time
-    <img src={url} alt="" className={`${box} shrink-0 rounded-full border-4 border-surface-soft object-cover`} />
+    <img src={url} alt="" loading="lazy" className={`${box} ${border} shrink-0 rounded-full border-surface-soft object-cover`} />
   ) : (
-    <div aria-hidden className={`${box} flex shrink-0 items-center justify-center rounded-full border-4 border-surface-soft bg-accent text-on-dark`}>
+    <div aria-hidden className={`${box} ${border} flex shrink-0 items-center justify-center rounded-full border-surface-soft bg-accent text-on-dark`}>
       {initials}
     </div>
   );
@@ -84,7 +85,7 @@ export function VerificationChip({ status }: { status: VerificationStatus }) {
 
 const TRUST_CHIP: Record<TrustLevel, { label: string; className: string; title: string }> = {
   CLAIMED: { label: "Claimed", className: "border-hairline text-muted", title: "You typed this link. Sign in with the platform to prove it is yours." },
-  LINKED: { label: "Linked", className: "border-success-border text-success", title: "Connected through sign-in — this account is yours." },
+  LINKED: { label: "Linked", className: "border-success-border text-success", title: "Connected through sign-in, so this account is yours." },
   VERIFIED: { label: "Verified", className: "border-success-border text-success", title: "Independently verified." },
 };
 

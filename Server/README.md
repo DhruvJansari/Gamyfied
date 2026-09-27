@@ -1,4 +1,4 @@
-# Gamyfied API
+# StandByDev API
 
 Express + TypeScript. Rules of the road: [Project/Rules.md](Project/Rules.md).
 
