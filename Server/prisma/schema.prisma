@@ -3,8 +3,12 @@
 // The connection URL lives in prisma.config.ts (read from DATABASE_URL), not here.
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  // The compiled server runs as plain CommonJS (`node dist/server.js`, no bundler). tsx
+  // masks an ESM/CJS mismatch here in local dev, but plain `node` in production can't
+  // `require()` an ESM file — hence forcing this explicitly rather than relying on inference.
+  moduleFormat = "cjs"
 }
 
 datasource db {
