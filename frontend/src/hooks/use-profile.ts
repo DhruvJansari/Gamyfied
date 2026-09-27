@@ -10,9 +10,6 @@ import { projectsService, type ProjectInput } from "@/services/projects";
 import { socialLinksService } from "@/services/social-links";
 import { usersService, type Me, type UpdateMeInput } from "@/services/users";
 
-// Every mutation on the profile page ends the same way: the server has already recomputed the
-// score and dropped its cache, so we refetch the one owner query and everything (score,
-// placement, sections) updates together. Two requests per action, never more.
 
 export function useMyProfile() {
   return useQuery<OwnerProfile>({
@@ -24,15 +21,22 @@ export function useMyProfile() {
 
 function useRefreshMyProfile() {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: queryKeys.profile.me });
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile.me }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard.all }),
+    ]);
 }
 
 export function useUpdateMyProfile() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: UpdateProfileInput) => profilesService.updateMyProfile(input),
-    // The PUT returns the whole owner view, so no refetch is needed here.
-    onSuccess: (profile) => queryClient.setQueryData(queryKeys.profile.me, profile),
+    // The PUT returns the whole owner view, so no refetch is needed for the profile itself.
+    onSuccess: (profile) => {
+      queryClient.setQueryData(queryKeys.profile.me, profile);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.leaderboard.all });
+    },
   });
 }
 

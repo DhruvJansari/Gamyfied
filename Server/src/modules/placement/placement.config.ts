@@ -56,7 +56,7 @@ export const PLACEMENT_TASKS: readonly PlacementTask[] = [
     required: false,
     evaluate: (s) => ({
       done: s.participations.length >= 1,
-      hint: "Hackathons, open source, events — or skip this",
+      hint: "Hackathons, open source, events, or skip this",
     }),
   },
 ];

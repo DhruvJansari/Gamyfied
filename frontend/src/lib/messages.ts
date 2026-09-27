@@ -14,6 +14,7 @@ const CATALOG: Partial<Record<Code, string>> = {
   [ErrorCode.OTP_TOO_MANY_ATTEMPTS]: "Too many wrong attempts. Request a new code.",
   [ErrorCode.OTP_RESEND_TOO_SOON]: "A code was just sent. Wait a minute before requesting another.",
   [ErrorCode.OTP_SEND_FAILED]: "We couldn't send the code. Check the address and try again.",
+  [ErrorCode.SMS_UNAVAILABLE]: "SMS sign-in is unavailable right now. Use your email instead.",
   [ErrorCode.ACCOUNT_NOT_FOUND]: "No account uses that yet. Create one to continue.",
   [ErrorCode.ACCOUNT_EXISTS]: "An account with those details already exists. Sign in instead.",
   [ErrorCode.OAUTH_PROVIDER_DISABLED]: "That sign-in method isn't available right now. Use another one.",

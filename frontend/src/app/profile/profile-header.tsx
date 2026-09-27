@@ -6,6 +6,7 @@ import { useState, type FormEvent } from "react";
 import { FormError, FormField } from "@/components/form-field";
 import { HeroField } from "@/components/hero-field";
 import { Avatar, PrimaryButton, SecondaryButton } from "@/components/profile-ui";
+import { TierEmblem } from "@/components/tier-emblem";
 import { useUpdateMe } from "@/hooks/use-profile";
 import { isApiError } from "@/lib/api/errors";
 import { messageFor } from "@/lib/messages";
@@ -92,15 +93,28 @@ export function ProfileHeader({ profile, tab, onTab, onEditPhoto }: {
         <dl className="grid grid-cols-3 border-y border-hairline">
           <Stat label="Total score" value={score.total.toLocaleString()} />
           <Stat label="From profile" value={`+${score.profile}`} accent />
-          <Stat
-            label="Status"
-            value={
-              <span className="flex items-center gap-2">
-                <span aria-hidden className={`size-2.5 rounded-full ${score.isRanked ? "bg-success-border" : "bg-border-strong"}`} />
-                {score.isRanked ? "Ranked" : `Unranked · ${placement.requiredCompleted}/${placement.requiredTotal}`}
-              </span>
-            }
-          />
+          {/* Score, rank and tier are three numbers, kept apart (Context.md §4). */}
+          {profile.ranking ? (
+            <Stat
+              label="Rank"
+              value={
+                <Link href={`/leaderboard?page=${profile.ranking.page}`} className="flex items-center gap-2 text-ink no-underline">
+                  <TierEmblem tier={profile.ranking.tier.tier} name={profile.ranking.tier.name} size="md" />
+                  #{profile.ranking.rank.toLocaleString()}
+                </Link>
+              }
+            />
+          ) : (
+            <Stat
+              label="Rank"
+              value={
+                <span className="flex items-center gap-2">
+                  <span aria-hidden className="size-2.5 rounded-full bg-border-strong" />
+                  Unranked · {placement.requiredCompleted}/{placement.requiredTotal}
+                </span>
+              }
+            />
+          )}
         </dl>
 
         <nav aria-label="Profile sections" className="-mb-px flex gap-2 overflow-x-auto">

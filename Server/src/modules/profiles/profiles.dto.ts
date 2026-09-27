@@ -1,7 +1,8 @@
+import type { RankingDto } from "../leaderboard/leaderboard.dto";
 import type { PlacementResult } from "../placement/placement.engine";
 import { toParticipationDto, type ParticipationDto } from "../participations/participations.dto";
 import { toProjectDto, type ProjectDto } from "../projects/projects.dto";
-import type { ProfileScore, Score } from "../scoring/scoring.repository";
+import type { Score, ScoreComponent } from "../scoring/scoring.repository";
 import type { ScoreBreakdown } from "../scoring/scoring.types";
 import type { ProfileRows } from "../scoring/snapshot";
 import { toSocialLinkDto, type SocialLinkDto } from "../social-links/social-links.dto";
@@ -9,6 +10,9 @@ import { toSocialLinkDto, type SocialLinkDto } from "../social-links/social-link
 // Two views of the same rows. The public one is what a stranger (or a recruiter) sees; the
 // owner one adds placement, the score explanation and anything editable. Nothing from the
 // account (email, phone, role) appears in either — that stays on /users/me.
+//
+// Score, rank and tier stay separate fields (Project/Rules.md, Data): `score` is the number,
+// `ranking` is the position and the tier derived from it, added by the service on every read.
 
 export type ProfileFieldsDto = {
   avatarUrl: string | null;
@@ -39,6 +43,8 @@ export type PublicProfileDto = {
   projects: ProjectDto[];
   participations: ParticipationDto[];
   score: Pick<ScoreSummaryDto, "total" | "isRanked">;
+  /** Null while unranked. */
+  ranking: RankingDto | null;
 };
 
 export type OwnerProfileDto = Omit<PublicProfileDto, "score"> & {
@@ -59,7 +65,7 @@ function fields(rows: ProfileRows): ProfileFieldsDto {
   };
 }
 
-function shared(rows: ProfileRows): Omit<PublicProfileDto, "score"> {
+function shared(rows: ProfileRows): Omit<PublicProfileDto, "score" | "ranking"> {
   return {
     publicId: `#${rows.user.publicId}`,
     handle: rows.user.handle,
@@ -74,11 +80,12 @@ function shared(rows: ProfileRows): Omit<PublicProfileDto, "score"> {
   };
 }
 
-export function toPublicProfileDto(rows: ProfileRows, score: Score): PublicProfileDto {
+/** Everything but `ranking`, which the service adds per read (it lives in Redis, not in these rows). */
+export function toPublicProfileDto(rows: ProfileRows, score: Score): Omit<PublicProfileDto, "ranking"> {
   return { ...shared(rows), score: { total: score.total, isRanked: score.isRanked } };
 }
 
-export function toOwnerProfileDto(rows: ProfileRows, profileScore: ProfileScore, score: Score, placement: PlacementResult): OwnerProfileDto {
+export function toOwnerProfileDto(rows: ProfileRows, profileScore: ScoreComponent, score: Score, placement: PlacementResult): Omit<OwnerProfileDto, "ranking"> {
   return {
     ...shared(rows),
     score: {

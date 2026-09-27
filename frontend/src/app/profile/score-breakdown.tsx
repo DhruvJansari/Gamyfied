@@ -51,7 +51,7 @@ function SectionRow({ section, open, onToggle }: { section: ScoreSection; open: 
         <ul id={id} className="mt-1 flex flex-col gap-2 rounded-md bg-page p-3">
           {section.items.length === 0 ? (
             <li>
-              <small className="text-muted">{section.optional ? "Nothing here — and that's fine." : "Nothing added yet."}</small>
+              <small className="text-muted">{section.optional ? "Nothing here, and that's fine." : "Nothing added yet."}</small>
             </li>
           ) : (
             section.items.map((item) => (

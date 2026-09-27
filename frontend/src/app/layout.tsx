@@ -22,11 +22,11 @@ const googleSans = Google_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "Gamyfied",
-    template: "%s · Gamyfied",
+    default: "StandByDev · Where developers establish their standing",
+    template: "%s · StandByDev",
   },
   description:
-    "A gamified ranking platform for developers. Build a codeable portfolio, get every claim verified, and climb the leaderboard.",
+    "StandByDev turns what you build into a visible standing: projects, proof, a reputation score, a rank on the ladder, and other builders to compete with.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

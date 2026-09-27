@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# Gamyfied frontend
+# StandByDev frontend
 
 - Read [project/Rules.md](project/Rules.md) before writing any page, component or hook. It is a contract.
 - Read [DESIGN.md](DESIGN.md) before writing any UI. Colours, radii and spacing come from its tokens, exposed as Tailwind utilities in `src/app/globals.css` (`bg-canvas`, `text-ink`, `border-hairline`, `rounded-lg`, `py-section`, …). Never hardcode a hex or reach for a Tailwind palette colour like `zinc-50`.

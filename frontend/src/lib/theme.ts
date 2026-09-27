@@ -1,12 +1,12 @@
 // Theme preference lives in one place. The settings page writes it, the inline
 // script below reads it before first paint so there is no flash of the wrong theme.
 
-export const THEME_STORAGE_KEY = "gamyfied:theme";
+export const THEME_STORAGE_KEY = "standbydev:theme";
 
 export const THEME_OPTIONS = ["light", "dark", "system"] as const;
 export type Theme = (typeof THEME_OPTIONS)[number];
 
-export const DEFAULT_THEME: Theme = "light";
+export const DEFAULT_THEME: Theme = "dark";
 
 /** Applies `.dark` to <html> from the stored preference. Idempotent, safe to call on change. */
 export function applyTheme(theme: Theme): void {

@@ -95,7 +95,7 @@ export const authService = {
       if (!profile) {
         // Code was valid but there is no account and no sign-up data: the frontend sends
         // them to sign-up with the identifier pre-filled (they already proved they own it).
-        throw new AppError(404, ErrorCode.ACCOUNT_NOT_FOUND, "No account for that yet — create one");
+        throw new AppError(404, ErrorCode.ACCOUNT_NOT_FOUND, "No account for that yet. Create one");
       }
       const now = new Date();
       const email = input.channel === "email" ? input.identifier : profile.email!;

@@ -7,6 +7,7 @@ import type { PublicProfile } from "@/services/profiles";
 
 import { HeroField } from "@/components/hero-field";
 import { Avatar, PARTICIPATION_KIND_LABEL as KIND_LABEL, TrustChip, VerificationChip } from "@/components/profile-ui";
+import { TierEmblem } from "@/components/tier-emblem";
 
 /**
  * What a visitor sees. Server-rendered from props; the only client-side piece is the
@@ -38,7 +39,7 @@ export function PublicProfileView({ profile }: { profile: PublicProfile }) {
             </div>
             {isOwner ? (
               <Link href="/profile" className="flex h-11 w-fit items-center rounded-pill border border-hairline bg-canvas px-5 text-ink no-underline active:bg-surface-strong">
-                This is you — edit profile
+                This is you. Edit profile
               </Link>
             ) : null}
           </div>
@@ -48,11 +49,21 @@ export function PublicProfileView({ profile }: { profile: PublicProfile }) {
               <dd className="text-2xl tabular-nums tracking-tight text-ink md:text-3xl">{profile.score.total.toLocaleString()}</dd>
             </div>
             <div className="flex flex-col gap-1 border-l border-hairline px-4 py-5 md:px-6">
-              <dt className="text-sm text-muted">Status</dt>
-              <dd className="flex items-center gap-2 text-2xl text-ink md:text-3xl">
-                <span aria-hidden className={`size-2.5 rounded-full ${profile.score.isRanked ? "bg-success-border" : "bg-border-strong"}`} />
-                {profile.score.isRanked ? "Ranked" : "Unranked"}
-              </dd>
+              <dt className="text-sm text-muted">Rank</dt>
+              {/* Score, rank and tier are three numbers, kept apart (Context.md §4). */}
+              {profile.ranking ? (
+                <dd className="text-2xl tabular-nums tracking-tight text-ink md:text-3xl">
+                  <Link href={`/leaderboard?page=${profile.ranking.page}`} className="flex items-center gap-2 text-ink no-underline">
+                  <TierEmblem tier={profile.ranking.tier.tier} name={profile.ranking.tier.name} size="md" />
+                    #{profile.ranking.rank.toLocaleString()}
+                  </Link>
+                </dd>
+              ) : (
+                <dd className="flex items-center gap-2 text-2xl text-ink md:text-3xl">
+                  <span aria-hidden className="size-2.5 rounded-full bg-border-strong" />
+                  Unranked
+                </dd>
+              )}
             </div>
             <div className="flex flex-col gap-1 border-l border-hairline px-4 py-5 md:px-6">
               <dt className="text-sm text-muted">Member since</dt>

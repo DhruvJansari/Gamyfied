@@ -49,8 +49,10 @@ Data
 Postgres is the source of truth for everything. Full stop.
 Redis holds the leaderboard, cached verification results, sessions, rate limit counters and job coordination.
 Anything in Redis must be rebuildable from Postgres. Write the rebuild path at the same time as the cache, not later.
-The leaderboard is a Redis sorted set. Position lookups and paging go through it, not through a sorted query in Postgres.
-Score, rank and tier are three separate concepts and are stored and named separately. Score is a raw number. Rank is a position derived by sorting scores. Tier is a letter derived from rank. Never conflate them in a column, a variable or an API field.
+The leaderboard is a Redis sorted set. Position lookups and paging go through it, not through a sorted query in Postgres. One sorted set per board key (modules/leaderboard/boards.config.ts); nothing hardcodes the global board.
+Score, rank and tier are three separate concepts and are stored and named separately. Score is a raw number. Rank is a position derived by sorting scores. Tier is a letter derived from rank, and only ever by tierForRank in modules/leaderboard/tier.engine.ts. Never conflate them in a column, a variable or an API field.
+Every score write ends in scoringRepository.recomputeTotal (total = base + Σ score_components), and scoringService.recomputeFromRows is the one place the board is updated afterwards (leaderboardSync.afterScoreWrite). A new score domain adds a ScoreComponent writer and nothing else.
+Exception, by design: a Redis failure while syncing the board after a committed score write is logged and the request completes. The user's data is saved and the board is rebuildable; a 500 would say otherwise. Every other Redis failure surfaces as an error.
 Keep a history of rank changes. Users will constantly ask why their rank moved, and current state alone cannot answer that.
 Every schema change ships as a migration. No manual changes to a live database.
 Database transactions wrap anything that writes to more than one table.

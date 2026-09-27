@@ -3,7 +3,7 @@ import { z } from "zod";
 import { displayNameSchema } from "../auth/auth.schemas";
 
 /** Handles that would collide with routes or read as ours. */
-export const RESERVED_HANDLES = new Set(["me", "admin", "administrator", "gamyfied", "support", "help", "api", "u", "profile", "settings", "leaderboard"]);
+export const RESERVED_HANDLES = new Set(["me", "admin", "administrator", "gamyfied", "standbydev", "support", "help", "api", "u", "profile", "settings", "leaderboard"]);
 
 export const handleSchema = z
   .string()

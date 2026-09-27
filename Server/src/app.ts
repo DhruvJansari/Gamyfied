@@ -7,6 +7,7 @@ import { env } from "./config/env";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler";
 import { originCheck } from "./middleware/origin-check";
 import { authRoutes } from "./modules/auth/auth.routes";
+import { leaderboardRoutes } from "./modules/leaderboard/leaderboard.routes";
 import { onboardingRoutes } from "./modules/onboarding/onboarding.routes";
 import { participationsRoutes } from "./modules/participations/participations.routes";
 import { profilesRoutes } from "./modules/profiles/profiles.routes";
@@ -17,7 +18,7 @@ import { usersRoutes } from "./modules/users/users.routes";
 export function createApp(): Express {
   const app = express();
 
-  app.set("trust proxy", 1);
+  app.set("trust proxy", env.trustProxy);
   app.disable("x-powered-by");
 
   app.use(helmet());
@@ -45,6 +46,7 @@ export function createApp(): Express {
   app.use("/api/social-links", socialLinksRoutes);
   app.use("/api/projects", projectsRoutes);
   app.use("/api/participations", participationsRoutes);
+  app.use("/api/leaderboard", leaderboardRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
